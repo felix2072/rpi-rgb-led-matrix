@@ -74,7 +74,7 @@ class SimpleSquaree(SampleBase):
 
         mpu = MPU6050()
         font = graphics.Font()
-        font.LoadFont("rpi-rgb-led-matrix/fonts/6x10.bdf")  # Stelle sicher, dass der Pfad korrekt ist
+        font.LoadFont("../../../fonts/6x10.bdf")  # Stelle sicher, dass der Pfad korrekt ist
         color = graphics.Color(255, 255, 0)
 
 
