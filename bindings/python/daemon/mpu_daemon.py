@@ -64,6 +64,6 @@ while True:
 	acc_x = read_raw_data(ACCEL_XOUT_H)/16384.0
 	acc_y = read_raw_data(ACCEL_YOUT_H)/16384.0
 
-	with open("/home/monikabansal/Desktop/rpi-rgb-led-matrix/bindings/python/daemon/mpu_data.txt", "w") as f:
+	with open("/home/felix/rpi-rgb-led-matrix/bindings/python/daemon/mpu_data.txt", "w") as f:
 		f.write(f"{acc_x},{acc_y}\n")
 	time.sleep(0.1)
