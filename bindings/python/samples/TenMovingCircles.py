@@ -8,7 +8,7 @@ from rgbmatrix import graphics
 
 def read_mpu_data():
     # Pfad zur Datei, in der die MPU-Daten gespeichert sind
-    file_path = "/home/monikabansal/Desktop/rpi-rgb-led-matrix/bindings/python/daemon/mpu_data.txt"
+    file_path = "../daemon/mpu_data.txt"
     
     try:
         with open(file_path, "r") as f:
