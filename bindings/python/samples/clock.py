@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import random
 import time
 import math
@@ -23,8 +22,9 @@ def read_mpu_data():
             acc_x = float(values[0])
             acc_y = float(values[1])
 
-            Ax = acc_x
-            Ay = acc_y
+            Ax = acc_x*-1.0
+            Ax += 0.044
+            Ay = acc_y*-1.0
 
             return Ax, Ay
 
@@ -200,7 +200,7 @@ class Clock(SampleBase):
 
             # Erzeuge neuen Ball jede Sekunde
             if current_second != last_created_second:
-                margin = 5  # etwas Abstand vom Rand
+                margin = 2  # etwas Abstand vom Rand
 
                 # Bestimme Startposition basierend auf Gravitation
                 if abs(Ax) > abs(Ay):  # horizontale "Gravitation"

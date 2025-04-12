@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance, ImageOps
 from samplebase import SampleBase
 import time
 import math
@@ -32,24 +32,26 @@ def read_mpu_data():
         print(f"Fehler beim Auslesen der Datei: {e}")
         return None
 
-class RotateEachChar(SampleBase):
+class RotatingClock(SampleBase):
     def __init__(self, *args, **kwargs):
-        super(RotateEachChar, self).__init__(*args, **kwargs)
-        self.font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf", 8)
-        #self.rotation_duration = 2.0  # Sekunden pro Umdrehung
+        super(RotatingClock, self).__init__(*args, **kwargs)
+        self.font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf", 10)
+        self.rotation_speed = 2.0  # Grad pro Sekunde
 
     def run(self):
-        #start_time = time.time()
 
-        char_spacing = 2  # Abstand zwischen Zeichen
         while True:
 
-             # Zeit aktualisieren (jede Sekunde neu)
-            current_time = time.strftime("%H") + "•" + time.strftime("%M")
-            self.text = current_time
+            # Uhrzeit holen (z.B. 12:34)
+            current_time = time.strftime("%H•%M")
 
-            # Blink-Logik für den mittleren Punkt
-            blink_on = (time.time() % 1) < 0.5  # True in der ersten halben Sekunde jeder Sekunde
+            # Neues leeres Bild vorbereiten
+            final_img = Image.new("RGB", (self.matrix.width, self.matrix.height), (0, 0, 0))
+            draw = ImageDraw.Draw(final_img)
+
+            # Positionierung vorbereiten
+            char_spacing = 1
+            x = -2
 
             # Lese die MPU-Daten aus der Datei (nur Ax und Ay)
             mpu_data = read_mpu_data()
@@ -58,67 +60,57 @@ class RotateEachChar(SampleBase):
             if mpu_data:
                 Ax, Ay = mpu_data
                 Ax *= -1
-                angle = angle = math.degrees(math.atan2(Ay, Ax))-90
+                angle = math.degrees(math.atan2(Ay, Ax))+90
 
+            for i, char in enumerate(current_time):
 
-            #elapsed = time.time() - start_time
-            #angle = (elapsed / self.rotation_duration) * 360 % 360
-            #angle = 0
-            # Leeres Endbild vorbereiten
-            final_img = Image.new("RGB", (self.matrix.width, self.matrix.height), (0, 0, 0))
+                # Zeichen rendern
+                bbox = self.font.getbbox(char)
+                char_width = bbox[2] - bbox[0]
+                char_height = bbox[3] - bbox[1]
 
-            # Positionierung vorbereiten
-            total_width = 0
-            char_imgs = []
-
-            # Berechne Breite aller rotierenden Chars
-            for char in self.text:
-                size = self.font.getsize(char)
-                total_width += size[0] + char_spacing
-
-            # Start X berechnen, damit mittig
-            x = (self.matrix.width - total_width + char_spacing) // 2
-            
-            # Jedes Zeichen separat rendern, rotieren, einfügen
-            for char in self.text:
-                # Bild für das Zeichen
-                size = self.font.getsize(char)
+                # Etwas mehr Platz zum Rotieren (Padding)
+                size = (char_width + 4, char_height + 4)  # +4 Padding für Drehen
                 char_img = Image.new("RGBA", size, (0, 0, 0, 0))
-                draw = ImageDraw.Draw(char_img)
+                char_draw = ImageDraw.Draw(char_img)
 
-                # Wähle Farbe: nur der mittlere Punkt blinkt
-                if char == "•":
-                    color = (0, 0, 0) if blink_on else (255, 0, 0)
+                # Farbe (Blinkender Doppelpunkt)
+                if char == "•" and (time.time() % 1) < 0.5:
+                    fill = (0, 0, 0)
                 else:
-                    color = (255, 0, 0)
+                    fill = (255, 0, 0)
 
-                draw.text((0, 0), char, font=self.font, fill=color)
-                #char_img = char_img.filter(ImageFilter.SHARPEN)
+    	        # Offset für zentriertes Texten
+                text_offset_x = (size[0] - char_width+3) // 2
+                text_offset_y = (size[1] - char_height-2) // 2
+                char_draw.text((text_offset_x, text_offset_y), char, font=self.font, fill=fill)
 
-                # Sharpen 
-                enhancer = ImageEnhance.Sharpness(char_img)
+                # Rotation mit expand=True
+                rotated = char_img.rotate(angle, resample=Image.BICUBIC, expand=True)
+
+                enhancer = ImageEnhance.Sharpness(final_img)
                 res = enhancer.enhance(10) 
 
                 # Improve contrast
                 enhancer = ImageEnhance.Contrast(res)
-                char_img = enhancer.enhance(10)
+                final_img = enhancer.enhance(10)
 
-                # Rotieren um Mittelpunkt
-                rotated = char_img.rotate(angle, resample=Image.BICUBIC, expand=True)
+                # Zielposition (y zentriert)
+                paste_y = (self.matrix.height - rotated.height) // 2 -2
+                final_img.paste(rotated, (x, paste_y), rotated)
 
-                # Positionieren
-                paste_x = x + (size[0] - rotated.width) // 2
-                paste_y = (self.matrix.height - rotated.height) // 2
-                final_img.paste(rotated, (paste_x, paste_y), rotated)
+                #x += rotated.width-5
+                x += 6
 
-                x += size[0] + char_spacing
+                #if x >= self.matrix.width:
+                #    break  # Stop if we overflow the screen
 
+            # Auf die Matrix übertragen
             self.matrix.SetImage(final_img.convert("RGB"))
             time.sleep(0.03)
 
-
-# Main function
+# Main
 if __name__ == "__main__":
-    app = RotateEachChar()
+    app = RotatingClock()
     if not app.process():
         app.print_help()
