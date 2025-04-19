@@ -8,6 +8,57 @@
 `sudo systemctl disable iscsid.service`
 `sudo systemctl disable open-iscsi.service`
 
+`make -C examples-api-use`
+
+# venv
+install venv
+`sudo apt install python3.12-venv`
+create venv
+`python3 -m venv /home/felix/rpi-rgb-led-matrix/venv`
+activate venv
+`source venv/bin/activate`
+inistall pip3
+`python3 -m pip install --upgrade pip`
+check pip3 version
+`python3 -m pip freeze`
+install pillow (PIL)
+`pip3 install pillow`
+check pillow version
+`python3 pillow --version`
+
+# autologin
+`sudo mkdir /etc/systemd/system/getty@tty1.service.d/`
+`sudo nano /etc/systemd/system/getty@tty1.service.d/override.conf`
+
+`[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --noissue --autologin felix %I $TERM
+Type=idle`
+
+`sudo nano ~/.bashrc`
+`if [ "$(tty)" = "/dev/tty1" ]; then
+  /usr/bin/python3 /home/felix/rpi-rgb-led-matrix/bindings/python/daemon/levelselector.py
+fi`
+
+# Crontab - for autostart
+`crontab -e`
+
+add to the end of the file
+
+`@reboot /usr/bin/python3 /home/felix/rpi-rgb-led-matrix/bindings/python/daemon/mpu_daemon.py &`
+`@reboot cd /home/felix/rpi-rgb-led-matrix/bindings/python/samples && sudo /home/felix/rpi-rgb-led-matrix/venv/bin/python3 ./clock.py -r 16 --led-cols 32 --led-no-hardware-pulse LED_NO_HARDWARE_PULS>`
+
+sudo needs credentials at start or grant execution without.
+`sudo visudo`
+`felix ALL=(ALL) NOPASSWD: /home/felix/rpi-rgb-led-matrix/venv/bin/python3`
+
+save and reboot
+
+check if the two processes are running
+`ps -fC python3`
+kill a process pid
+`sudo kill -9 3331`
+
 # Problems
 
 felix@ledpi:~$ `sudo apt-get install build-essential`
@@ -47,6 +98,6 @@ You can watch what's happening with the actual package installs:
 
 
 # Display
-`sudo python3 ./TenMovingCircles.py  -r 16 --led-cols 32 --led-no-hardware-pulse LED_NO_HARDWARE_PULSE --led-row-addr-type 2 --led-brightness 30 --led-multiplexing 13`
+`sudo /home/felix/rpi-rgb-led-matrix/venv/bin/python3 ./clock.py  -r 16 --led-cols 32 --led-no-hardware-pulse LED_NO_HARDWARE_PULSE --led-row-addr-type 2 --led-brightness 30 --led-multiplexing 13`
 
-`sudo python3 ./demo -D0 --led-no-hardware-pulse --led-cols=32 --led-rows=16 --led-row-addr-type=2 --led-multiplexing=3 --led-brightness=50 --led-show-refresh`
+`sudo /home/felix/rpi-rgb-led-matrix/venv/bin/python3 ./demo -D0 --led-no-hardware-pulse --led-cols=32 --led-rows=16 --led-row-addr-type=2 --led-multiplexing=3 --led-brightness=50 --led-show-refresh`
