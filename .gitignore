@@ -4,3 +4,18 @@
 *.so
 .envrc
 .direnv
+
+# Python build / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+
+# Virtualenv
+venv/
+
+# RGB-Matrix Python build artifacts
+bindings/python/dist/
+bindings/python/rgbmatrix.egg-info/
+bindings/python/rgbmatrix/__pycache__/
+bindings/python/samples/__pycache__/

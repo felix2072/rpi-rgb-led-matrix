@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from samplebase import SampleBase
 import math
 
