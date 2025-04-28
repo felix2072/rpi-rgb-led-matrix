@@ -19,3 +19,5 @@ bindings/python/dist/
 bindings/python/rgbmatrix.egg-info/
 bindings/python/rgbmatrix/__pycache__/
 bindings/python/samples/__pycache__/
+/bindings/python/samples/output.png
+/vl/assets/
